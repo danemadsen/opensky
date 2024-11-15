@@ -22,7 +22,7 @@ jobs:
           USERNAME: ${{ secrets.OPEN_SKY_USERNAME }}
           PASSWORD: ${{ secrets.OPEN_SKY_PASSWORD }}
         run: |
-          curl -u "$USERNAME:$PASSWORD" -s "$OPEN_SKY_URL" -o states.json
+          curl -u "$USERNAME:$PASSWORD" -s "$OPEN_SKY_URL" | jq . > states.json
           timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
           cp states.json "historic/states_$timestamp.json"
 
