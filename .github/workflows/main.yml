@@ -2,7 +2,7 @@ name: OpenSky Data Scraper
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/6 * * * *"
   workflow_dispatch:
 
 permissions:
