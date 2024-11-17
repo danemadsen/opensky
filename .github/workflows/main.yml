@@ -23,14 +23,14 @@ jobs:
           PASSWORD: ${{ secrets.OPEN_SKY_PASSWORD }}
         run: |
           curl -u "$USERNAME:$PASSWORD" -s "$OPEN_SKY_URL" | jq . > states.json
-          timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
-          cp states.json "historic/states_$timestamp.json"
+          file_time=$(jq '.time' states.json)
+          cp states.json "historic/$file_time.json"
 
       - name: Commit data to repository
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add states.json
-          git add historic/states_*.json
+          git add historic/*.json
           git commit -m "Update OpenSky data"
           git push
