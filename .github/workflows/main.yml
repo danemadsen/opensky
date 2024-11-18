@@ -22,27 +22,36 @@ jobs:
           USERNAME: ${{ secrets.OPEN_SKY_USERNAME }}
           PASSWORD: ${{ secrets.OPEN_SKY_PASSWORD }}
         run: |
-          # Fetch current states
+          # Ensure the historic directory exists
+          mkdir -p historic
+
+          # Determine the last timestamp from the previous run
+          last_time=0
+          if [ -f states.json ]; then
+            last_time=$(jq '.time' states.json)
+          fi
+
+          # Fetch the latest states data
           curl -u "$USERNAME:$PASSWORD" -s "$OPEN_SKY_URL" | jq . > states.json
           current_time=$(jq '.time' states.json)
 
-          # Calculate timestamps for 90-second intervals in the past hour
+          # Calculate 90-second intervals from the last run until now, up to 1 hour
           timestamps=()
-          for i in $(seq 90 90 3600); do
-            timestamp=$((current_time - i))
-            if [ "$timestamp" -ge $((current_time - 3600)) ]; then
-              timestamps+=("$timestamp")
-            fi
-          done
+          if [ "$last_time" -gt 0 ]; then
+            for ((timestamp=last_time+90; timestamp<=current_time; timestamp+=90)); do
+              if [ "$timestamp" -ge $((current_time - 3600)) ]; then
+                timestamps+=("$timestamp")
+              fi
+            done
+          fi
 
-          # Fetch and save historic states
-          mkdir -p historic
+          # Fetch historic data for each interval
           for timestamp in "${timestamps[@]}"; do
             echo "Fetching states for time $timestamp"
             curl -u "$USERNAME:$PASSWORD" -s "$OPEN_SKY_URL?time=$timestamp" | jq . > "historic/$timestamp.json"
           done
 
-          # Copy the latest states to historic
+          # Save the latest data to historic folder
           cp states.json "historic/$current_time.json"
 
       - name: Commit data to repository
